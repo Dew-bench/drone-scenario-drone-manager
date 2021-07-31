@@ -5,11 +5,11 @@ import requests
 
 app = Flask(__name__)
 
-DEVICES = {}
+DRONES = []
 
 @app.route('/')
 def hello_world():
-    return 'dew-master'
+    return 'drone scenario drone manager'
 
 @app.route('/api/ip')
 def get_ip():
@@ -20,40 +20,30 @@ def get_ip():
         "ip": IP_addres
     })
 
-@app.route('/api/device/list', methods=['GET'])
+@app.route('/api/drone/list', methods=['GET'])
 def get_device_list():
-    return json.dumps(DEVICES)
+    return json.dumps(DRONES)
 
-# bind device to dew server, and setup data pipeline for device
-@app.route('/api/device/bind/<string:devtype>/<string:id>', methods=['POST', 'PUT'])
-def bind_device(devtype, id):
+@app.route('/api/drone/add', methods=['POST', 'PUT'])
+def add_drone():
     target_url = request.get_json()
-    DEVICES[id] = {'url':target_url['val'], 'type':devtype, 'id':id}  
-    add_device_to_pipeline(DEVICES[id])
+    DRONES.append(target_url['url'])
+    add_drone(target_url['url'])
     return "ok"
 
 
-# unbind device and remove data pipeline
-@app.route('/api/device/unbind/<string:devtype>/<string:id>', methods=['POST', 'PUT'])
-def unbind_device(devtype, id):
-    DEVICES[id] = {'url':target_url['val'], 'type':devtype, 'id':id} 
-    remove_device_from_pipeline(DEVICES[id])
+@app.route('/api/drone/remove', methods=['POST', 'PUT'])
+def remove_drone():
+    target_url = request.get_json()
+    remove_drone(DRONES[target_url])
+    DRONES.remove(target_url['url'])
     return "ok"
 
+def add_drone(id):
+    pass
 
-# for "dew-service-manager" to setup data pipeline
-def add_device_to_pipeline(device):
-    try:
-        response = requests.put('http://localhost:5001/api/pipeline/add/device', data=json.dumps(device), headers={"Content-Type": "application/json"})
-    except requests.exceptions.RequestException as e:
-        print(e)
-
-def remove_device_from_pipeline(device):
-    try:
-        response = requests.put('http://localhost:5001/api/pipeline/remove/device', data=json.dumps(device), headers={"Content-Type": "application/json"})
-    except requests.exceptions.RequestException as e:
-        print(e)
-
+def remove_drone(id):
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
